@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>1-to-1 Chat</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.3/socket.io.js"></script>
+    <script type="text/javascript">
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+        var username = '';
+        var recipient = '';
+
+        function joinChat() {
+            username = document.getElementById('username').value;
+            recipient = document.getElementById('recipient').value;
+            if (username && recipient) {
+                socket.emit('join', { 'username': username, 'recipient': recipient });
+                document.getElementById('chat').style.display = 'block';
+                document.getElementById('join').style.display = 'none';
+            } else {
+                alert('Please enter both your username and the recipient\'s username.');
+            }
+        }
+
+        function sendMessage() {
+            var message = document.getElementById('message').value;
+            socket.emit('send_message', { 'recipient': recipient, 'message': message });
+            document.getElementById('message').value = '';
+        }
+
+        socket.on('connect', function () {
+            console.log('Connected to server');
+        });
+
+        socket.on('disconnect', function () {
+            console.log('Disconnected from server');
+        });
+
+        socket.on('receive_message', function (data) {
+            var messagesContainer = document.getElementById('messages');
+            messagesContainer.innerHTML += '<div><b>' + data.sender + ':</b> ' + data.message + '</div>';
+        });
+
+        socket.on('connection_status', function (data) {
+            var messagesContainer = document.getElementById('messages');
+            messagesContainer.innerHTML += '<div><i>' + data.message + '</i></div>';
+        });
+
+    </script>
+</head>
+
+<body>
+    <h1>1-to-1 Chat</h1>
+    <div id="join">
+        <label for="username">Your Username:</label>
+        <input type="text" id="username"><br>
+        <label for="recipient">Recipient's Username:</label>
+        <input type="text" id="recipient"><br>
+        <button onclick="joinChat()">Join Chat</button>
+    </div>
+    <div id="chat" style="display: none;">
+        <label for="message">Message:</label>
+        <input type="text" id="message">
+        <button onclick="sendMessage()">Send</button>
+        <h2>All Messages</h2>
+        <div id="messages"></div>
+    </div>
+</body>
+
+</html>
